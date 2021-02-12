@@ -6,6 +6,12 @@ Class that implements more control over an URL in PHP, like a Javascript URL cla
 composer require rlvendramini/url-parser
 ```
 
+## Setup
+If you already have a vendor library in your project, you might have the following line. If not, just add:
+```php
+require __DIR__ . '/vendor/autoload.php';
+```
+
 ## Usage
 
 Instantiate from a string
