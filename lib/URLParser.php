@@ -42,10 +42,6 @@ final class URLParser {
     return $this->queryParams[$key];
   }
 
-  public function originalUrl() {
-    return $this->originalUrl;
-  }
-
   public function setParam($key, $value) {
     $this->queryParams[$key] = $value;
     return $this->queryParams[$key];
