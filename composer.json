@@ -1,0 +1,21 @@
+{
+    "name": "rlvendramini/url-parser",
+    "description": "A URL parser to edit and rebuild URL strings",
+    "type": "library",
+    "autoload": {
+        "classmap": [
+            "lib/"
+        ]
+    },
+    "require": {
+        "phpunit/phpunit": "^9"
+    },
+    "license": "MIT License",
+    "authors": [
+        {
+            "name": "Renan Luiz Vendramini",
+            "email": "renanlvendramini@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable"
+}
