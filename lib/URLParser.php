@@ -43,6 +43,9 @@ final class URLParser {
   }
 
   public function setParam($key, $value) {
+    $key = $this->sanitizeKeyString($key);
+    $value = $this->sanitizeValueString($value);
+
     $this->queryParams[$key] = $value;
     return $this->queryParams[$key];
   }
@@ -77,8 +80,31 @@ final class URLParser {
       $part = explode("=", $term);
       if (!isset($part[0])) continue;
 
-      $this->queryParams[$part[0]] = isset($part[1]) ? $part[1] : '';
+      $sanitizedKey = $this->sanitizeKeyString($part[0]);
+      $sanitizedValue = $this->sanitizeValueString(isset($part[1]) ? $part[1] : '');
+
+      $this->queryParams[$sanitizedKey] = $sanitizedValue;
     }
+  }
+
+  private function sanitizeKeyString($string) {
+    // turn into low caps
+    $str = trim(strtolower($string));
+    // turn \s and - into _
+    $str = preg_replace('/\s|\-/', '_', $str);
+    if (!$str) throw new Exception("'{$str}' is an invalid key");
+    // remove any character except alphanumerical and underscore
+    $str = preg_replace('/[^a-zA-Z0-9_]/', '', $str);
+    if (!$str) throw new Exception("'{$string}' is an invalid key");
+
+    return $str;
+  }
+
+  private function sanitizeValueString($string) {
+    if (!$string) return;
+
+    $str = trim(urlencode($string));
+    return $str;
   }
 
   private function validateUrl($url) {

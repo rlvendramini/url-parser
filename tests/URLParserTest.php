@@ -5,6 +5,16 @@ use PHPUnit\Framework\TestCase;
 
 require __DIR__ . '/../lib/URLParser.php';
 
+
+class PHPUnitUtil {
+  public static function callMethod($obj, $name, $args) {
+    $class = new \ReflectionClass($obj);
+    $method = $class->getMethod($name);
+    $method->setAccessible(true);
+    return $method->invokeArgs($obj, $args);
+  }
+}
+
 final class URLParserTest extends TestCase {
   public function testCanBeCreatedFromValidUrl() {
     $this->assertInstanceOf(
@@ -59,6 +69,57 @@ final class URLParserTest extends TestCase {
     $this->assertEquals(
       'foo',
       $instance->getParam('bar')
+    );
+  }
+
+
+  public function testCanSetParamWithDirtyKeyAndValue() {
+    $instance = URLParser::fromString('https://foo.bar/');
+    $instance->setParam(' #Mega Foo~ ', 'foo bar');
+
+    $this->AssertNull(
+      $instance->getParam(' #Mega Foo~ ')
+    );
+
+    $this->assertEquals(
+      'foo+bar',
+      $instance->getParam('mega_foo')
+    );
+
+    $this->assertNotEquals(
+      'foo bar',
+      $instance->getParam('mega_foo')
+    );
+  }
+
+  public function testCanSanitizeKeyString() {
+    $instance = URLParser::fromString('https://foo.bar');
+
+    $returnVal = PHPUnitUtil::callMethod(
+      $instance,
+      'sanitizeKeyString', 
+      array(" #Mega Foo-bar~ ")
+    );
+
+    $this->assertEquals(
+      'mega_foo_bar',
+      $returnVal
+    );
+  }
+
+
+  public function testCanSanitizeValueString() {
+    $instance = URLParser::fromString('https://foo.bar');
+    
+    $returnVal = PHPUnitUtil::callMethod(
+      $instance,
+      'sanitizeValueString', 
+      array("Foo Bar")
+    );
+
+    $this->assertEquals(
+      'Foo+Bar',
+      $returnVal
     );
   }
 }
