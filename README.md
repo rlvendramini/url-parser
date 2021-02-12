@@ -17,16 +17,29 @@ then you can get query string params
 ```php
 $url = URLParser::fromString('https://foo.bar/home?param=value');
 
-$fooParam = $url->getParam('param'); // value
+$url->getParam('param'); // value
 ```
 
 and set new params or overwrite existing ones
 ```php
 $url = URLParser::fromString('https://foo.bar/home?param=value');
 
-$fooParam = $url->setParam('param', 'super value'); // super+value
-$fooParam = $url->setParam(' #amazing param~', 'amazing value'); // amazing+value
+$url->setParam('param', 'super value'); // super+value
+$url->setParam(' #amazing param~', 'amazing value'); // amazing+value
 
-$fooParam = $url->getParam('param'); // super+value
-$fooParam = $url->getParam('amazing_param'); // amazing+value
+$url->getParam('param'); // super+value
+$url->getParam('amazing_param'); // amazing+value
+```
+
+and finally, you can get modified url as a string
+```php
+$url = URLParser::fromString('https://foo.bar/home?param=value');
+
+$url->setParam('param', 'super value'); // super+value
+$url->setParam(' #amazing param~', 'amazing value'); // amazing+value
+
+$url->getParam('param'); // super+value
+$url->getParam('amazing_param'); // amazing+value
+
+$url->toString() // https://foo.bar/home?param=super+value&amazing_param=amazing+value
 ```
