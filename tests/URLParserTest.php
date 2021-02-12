@@ -20,16 +20,45 @@ final class URLParserTest extends TestCase {
   }
 
   public function testCanBeUsedAsString() {
+    $instance = URLParser::fromString('https://foo.bar/?foo=bar');
+
     $this->assertEquals(
       'https://foo.bar/?foo=bar',
-      URLParser::fromString('https://foo.bar/?foo=bar')->toString()
+      $instance->toString()
     );
   }
 
   public function testCanGetQueryStringValue() {
+    $instance = URLParser::fromString('https://foo.bar/?foo=bar');
+
     $this->assertEquals(
       'bar',
-      URLParser::fromString('https://foo.bar/?foo=bar')->getParam('foo')
+      $instance->getParam('foo')
+    );
+  }
+
+  public function testCanModifyQueryStringValue() {
+    $instance = URLParser::fromString('https://foo.bar/?foo=bar');
+    $instance->setParam('foo', 'foobar');
+
+    $this->assertNotEquals(
+      'bar',
+      $instance->getParam('foo')
+    );
+
+    $this->assertEquals(
+      'foobar',
+      $instance->getParam('foo')
+    );
+  }
+
+  public function testCanSetNewQueryStringValue() {
+    $instance = URLParser::fromString('https://foo.bar/?foo=bar');
+    $instance->setParam('bar', 'foo');
+
+    $this->assertEquals(
+      'foo',
+      $instance->getParam('bar')
     );
   }
 }
