@@ -17,5 +17,8 @@
             "email": "renanlvendramini@gmail.com"
         }
     ],
-    "minimum-stability": "stable"
+    "minimum-stability": "stable",
+    "scripts": {
+        "test": "./vendor/bin/phpunit --testdox tests"
+    }
 }
