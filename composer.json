@@ -10,7 +10,7 @@
     "require": {
         "phpunit/phpunit": "^9"
     },
-    "license": "MIT License",
+    "license": "MIT",
     "authors": [
         {
             "name": "Renan Luiz Vendramini",
