@@ -1,4 +1,6 @@
 # url-parser
+ [![Version](https://poser.pugx.org/rlvendramini/url-parser/v)](//packagist.org/packages/rlvendramini/url-parser) [![Total Downloads](https://poser.pugx.org/rlvendramini/url-parser/downloads)](//packagist.org/packages/rlvendramini/url-parser) [![License](https://poser.pugx.org/rlvendramini/url-parser/license)](//packagist.org/packages/rlvendramini/url-parser) [![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/ellerbrock/open-source-badges/)
+
 Class that implements more control over an URL in PHP, like a Javascript URL class
 
 ## Instalation
