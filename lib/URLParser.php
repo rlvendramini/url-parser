@@ -108,7 +108,7 @@ final class URLParser {
   }
 
   private function validateUrl($url) {
-    if (!filter_var($url, FILTER_VALIDATE_URL, FILTER_FLAG_SCHEME_REQUIRED)) 
+    if (!filter_var($url, FILTER_VALIDATE_URL)) 
       throw new InvalidArgumentException("'{$url}' is not a valid URL");
   }
 }
