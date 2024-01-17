@@ -2,6 +2,7 @@
     "name": "rlvendramini/url-parser",
     "description": "A URL parser to edit and rebuild URL strings",
     "type": "library",
+    "version": "2.0.0",
     "autoload": {
         "classmap": [
             "lib/"

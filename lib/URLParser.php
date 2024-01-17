@@ -6,7 +6,7 @@
  * Works like the URL class from Javascript.
  *
  * @author Renan Luiz Vendramini <renanlvendramini@gmail.com>
- * @version 1.0
+ * @version 2.0.0
  */
 final class URLParser
 {
