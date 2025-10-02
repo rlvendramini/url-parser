@@ -1,114 +1,158 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * A class to parse an URL from its string, modify the parts independently
  * and then turn it to a string again.
  * Works like the URL class from Javascript.
- * 
+ *
  * @author Renan Luiz Vendramini <renanlvendramini@gmail.com>
  * @version 1.0
  */
-final class URLParser {
-  protected $originalUrl;
+final class URLParser
+{
+    protected string $originalUrl;
 
-  private $parsedUrl;
+    /** @var array<string, mixed>|false */
+    private array|false $parsedUrl;
 
-  private $protocol = null;
-  private $host = null;
-  private $path = null;
-  private $query = null;
-  private $fragment = null;
-  private $queryParams = [];
+    private ?string $protocol = null;
+    private ?string $host = null;
+    private ?string $path = null;
+    private ?string $query = null;
+    private ?string $fragment = null;
 
-  const DEFAULT_PROTOCOL = 'https';
-  const DEFAULT_PATH = '/';
+    /** @var array<string, string> */
+    private array $queryParams = [];
 
-  function __construct($url) {
-    $this->validateUrl($url);
-    
-    $this->originalUrl = $url;
-    $this->destructure();
-  }
+    private const DEFAULT_PROTOCOL = 'https';
+    private const DEFAULT_PATH = '/';
 
-  // public functions
+    public function __construct(string $url)
+    {
+        $this->validateUrl($url);
 
-  public static function fromString($url) {
-    return new self($url);
-  }
-
-  public function getParam($key) {
-    if (!isset($this->queryParams[$key])) return;
-
-    return $this->queryParams[$key];
-  }
-
-  public function setParam($key, $value) {
-    $key = $this->sanitizeKeyString($key);
-    $value = $this->sanitizeValueString($value);
-
-    $this->queryParams[$key] = $value;
-    return $this->queryParams[$key];
-  }
-
-  public function toString() {
-    $this->query = http_build_query($this->queryParams);
-    if ($this->query) $this->query = "?{$this->query}";
-
-    if (!$this->protocol) $this->protocol = $this::DEFAULT_PROTOCOL;
-    if (!$this->path) $this->path = $this::DEFAULT_PATH;
-
-    return "{$this->protocol}://{$this->host}{$this->path}{$this->query}{$this->fragment}";
-  }
-
-  // Private Functions
-
-  private function destructure() {
-    $this->parsedUrl = parse_url($this->originalUrl);
-    if (!$this->parsedUrl) return;
-
-    foreach(['scheme', 'host', 'path', 'query', 'fragment'] as $key) {
-      $this->$key = isset($this->parsedUrl[$key]) ? $this->parsedUrl[$key] : null;
+        $this->originalUrl = $url;
+        $this->destructure();
     }
 
-    $this->parseQuery();
-  }
+    // public functions
 
-  private function parseQuery() {
-    if (!$this->query) return;
-
-    foreach(explode("&", $this->query) as $term) {
-      $part = explode("=", $term);
-      if (!isset($part[0])) continue;
-
-      $sanitizedKey = $this->sanitizeKeyString($part[0]);
-      $sanitizedValue = $this->sanitizeValueString(isset($part[1]) ? $part[1] : '');
-
-      $this->queryParams[$sanitizedKey] = $sanitizedValue;
+    public static function fromString(string $url): self
+    {
+        return new self($url);
     }
-  }
 
-  private function sanitizeKeyString($string) {
-    // turn into low caps
-    $str = trim(strtolower($string));
-    // turn \s and - into _
-    $str = preg_replace('/\s|\-/', '_', $str);
-    if (!$str) throw new Exception("'{$str}' is an invalid key");
-    // remove any character except alphanumerical and underscore
-    $str = preg_replace('/[^a-zA-Z0-9_]/', '', $str);
-    if (!$str) throw new Exception("'{$string}' is an invalid key");
+    public function getParam(string $key): ?string
+    {
+        if (!isset($this->queryParams[$key])) {
+            return null;
+        }
 
-    return $str;
-  }
+        return $this->queryParams[$key];
+    }
 
-  private function sanitizeValueString($string) {
-    if (!$string) return;
+    public function setParam(string $key, string $value): string
+    {
+        $key = $this->sanitizeKeyString($key);
+        $sanitizedValue = $this->sanitizeValueString($value);
 
-    $str = trim(urlencode($string));
-    return $str;
-  }
+        $this->queryParams[$key] = $sanitizedValue;
 
-  private function validateUrl($url) {
-    if (!filter_var($url, FILTER_VALIDATE_URL)) 
-      throw new InvalidArgumentException("'{$url}' is not a valid URL");
-  }
+        return $this->queryParams[$key];
+    }
+
+    public function toString(): string
+    {
+        $this->query = http_build_query($this->queryParams);
+        if ($this->query) {
+            $this->query = "?{$this->query}";
+        }
+
+        if (!$this->protocol) {
+            $this->protocol = self::DEFAULT_PROTOCOL;
+        }
+        if (!$this->path) {
+            $this->path = self::DEFAULT_PATH;
+        }
+
+        return "{$this->protocol}://{$this->host}{$this->path}{$this->query}{$this->fragment}";
+    }
+
+    // Private Functions
+
+    private function destructure(): void
+    {
+        $this->parsedUrl = parse_url($this->originalUrl);
+        if (!$this->parsedUrl) {
+            return;
+        }
+
+        $propertyMap = [
+            'scheme' => 'protocol',
+            'host' => 'host',
+            'path' => 'path',
+            'query' => 'query',
+            'fragment' => 'fragment',
+        ];
+
+        foreach ($propertyMap as $urlKey => $propertyName) {
+            $this->$propertyName = $this->parsedUrl[$urlKey] ?? null;
+        }
+
+        $this->parseQuery();
+    }
+
+    private function parseQuery(): void
+    {
+        if (!$this->query) {
+            return;
+        }
+
+        foreach (explode("&", $this->query) as $term) {
+            $part = explode("=", $term);
+
+            $sanitizedKey = $this->sanitizeKeyString($part[0]);
+            $sanitizedValue = $this->sanitizeValueString($part[1] ?? '');
+
+            $this->queryParams[$sanitizedKey] = $sanitizedValue;
+        }
+    }
+
+    private function sanitizeKeyString(string $string): string
+    {
+        // turn into low caps
+        $str = trim(strtolower($string));
+        // turn \s and - into _
+        $str = preg_replace('/\s|\-/', '_', $str);
+        if (!$str) {
+            throw new \Exception("'{$str}' is an invalid key");
+        }
+        // remove any character except alphanumerical and underscore
+        $str = preg_replace('/[^a-zA-Z0-9_]/', '', $str);
+        if (!$str) {
+            throw new \Exception("'{$string}' is an invalid key");
+        }
+
+        return $str;
+    }
+
+    private function sanitizeValueString(string $string): string
+    {
+        if (!$string) {
+            return '';
+        }
+
+        $str = trim(urlencode($string));
+
+        return $str;
+    }
+
+    private function validateUrl(string $url): void
+    {
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            throw new \InvalidArgumentException("'{$url}' is not a valid URL");
+        }
+    }
 }
