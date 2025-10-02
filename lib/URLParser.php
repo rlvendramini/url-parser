@@ -12,19 +12,15 @@ declare(strict_types=1);
  */
 final class URLParser
 {
-    protected string $originalUrl;
-
-    /** @var array<string, mixed>|false */
-    private array|false $parsedUrl;
-
     private ?string $protocol = null;
     private ?string $host = null;
     private ?string $path = null;
-    private ?string $query = null;
     private ?string $fragment = null;
 
     /** @var array<string, string> */
     private array $queryParams = [];
+
+    private ?string $cachedUrl = null;
 
     private const DEFAULT_PROTOCOL = 'https';
     private const DEFAULT_PATH = '/';
@@ -32,9 +28,7 @@ final class URLParser
     public function __construct(string $url)
     {
         $this->validateUrl($url);
-
-        $this->originalUrl = $url;
-        $this->destructure();
+        $this->destructure($url);
     }
 
     // public functions
@@ -46,15 +40,12 @@ final class URLParser
 
     public function getParam(string $key): ?string
     {
-        if (!isset($this->queryParams[$key])) {
-            return null;
-        }
-
-        return $this->queryParams[$key];
+        return $this->queryParams[$key] ?? null;
     }
 
     public function setParam(string $key, string $value): string
     {
+        $this->cachedUrl = null; // Invalida o cache
         $key = $this->sanitizeKeyString($key);
         $sanitizedValue = $this->sanitizeValueString($value);
 
@@ -65,56 +56,55 @@ final class URLParser
 
     public function toString(): string
     {
-        $this->query = http_build_query($this->queryParams);
-        if ($this->query) {
-            $this->query = "?{$this->query}";
+        // Retorna cache se disponível
+        if ($this->cachedUrl !== null) {
+            return $this->cachedUrl;
         }
 
-        if (!$this->protocol) {
-            $this->protocol = self::DEFAULT_PROTOCOL;
-        }
-        if (!$this->path) {
-            $this->path = self::DEFAULT_PATH;
-        }
+        $protocol = $this->protocol ?? self::DEFAULT_PROTOCOL;
+        $path = $this->path ?? self::DEFAULT_PATH;
 
-        return "{$this->protocol}://{$this->host}{$this->path}{$this->query}{$this->fragment}";
+        $query = $this->queryParams ? '?' . http_build_query($this->queryParams) : '';
+        $fragment = $this->fragment ?? '';
+
+        $this->cachedUrl = "{$protocol}://{$this->host}{$path}{$query}{$fragment}";
+
+        return $this->cachedUrl;
     }
 
     // Private Functions
 
-    private function destructure(): void
+    private function destructure(string $url): void
     {
-        $this->parsedUrl = parse_url($this->originalUrl);
-        if (!$this->parsedUrl) {
+        $parsed = parse_url($url);
+        if (!$parsed) {
             return;
         }
 
-        $propertyMap = [
-            'scheme' => 'protocol',
-            'host' => 'host',
-            'path' => 'path',
-            'query' => 'query',
-            'fragment' => 'fragment',
-        ];
+        $this->protocol = $parsed['scheme'] ?? null;
+        $this->host = $parsed['host'] ?? null;
+        $this->path = $parsed['path'] ?? null;
+        $this->fragment = isset($parsed['fragment']) ? "#{$parsed['fragment']}" : null;
 
-        foreach ($propertyMap as $urlKey => $propertyName) {
-            $this->$propertyName = $this->parsedUrl[$urlKey] ?? null;
+        // Usa parse_str() nativo do PHP, que é mais eficiente
+        if (isset($parsed['query'])) {
+            $this->parseQuery($parsed['query']);
         }
-
-        $this->parseQuery();
     }
 
-    private function parseQuery(): void
+    private function parseQuery(string $query): void
     {
-        if (!$this->query) {
-            return;
-        }
+        // parse_str é mais eficiente e robusto que explode manual
+        parse_str($query, $params);
 
-        foreach (explode("&", $this->query) as $term) {
-            $part = explode("=", $term);
+        foreach ($params as $key => $value) {
+            // parse_str pode retornar arrays, ignoramos esses casos
+            if (!is_string($key) || is_array($value)) {
+                continue;
+            }
 
-            $sanitizedKey = $this->sanitizeKeyString($part[0]);
-            $sanitizedValue = $this->sanitizeValueString($part[1] ?? '');
+            $sanitizedKey = $this->sanitizeKeyString($key);
+            $sanitizedValue = $this->sanitizeValueString((string) $value);
 
             $this->queryParams[$sanitizedKey] = $sanitizedValue;
         }
@@ -122,16 +112,13 @@ final class URLParser
 
     private function sanitizeKeyString(string $string): string
     {
-        // turn into low caps
-        $str = trim(strtolower($string));
-        // turn \s and - into _
-        $str = preg_replace('/\s|\-/', '_', $str);
-        if (!$str) {
-            throw new \Exception("'{$str}' is an invalid key");
-        }
-        // remove any character except alphanumerical and underscore
-        $str = preg_replace('/[^a-zA-Z0-9_]/', '', $str);
-        if (!$str) {
+        // Combina trim, lowercase e substitui em uma operação
+        $str = strtolower(trim($string));
+
+        // Combina ambas as regex em uma única operação
+        $str = preg_replace(['/[\s\-]/', '/[^a-z0-9_]/'], ['_', ''], $str);
+
+        if ($str === '' || $str === null) {
             throw new \Exception("'{$string}' is an invalid key");
         }
 
@@ -140,13 +127,12 @@ final class URLParser
 
     private function sanitizeValueString(string $string): string
     {
-        if (!$string) {
+        if ($string === '') {
             return '';
         }
 
-        $str = trim(urlencode($string));
-
-        return $str;
+        // urlencode já não adiciona espaços, então trim primeiro é mais eficiente
+        return urlencode(trim($string));
     }
 
     private function validateUrl(string $url): void
