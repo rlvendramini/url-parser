@@ -1,24 +1,37 @@
 {
-    "name": "rlvendramini/url-parser",
-    "description": "A URL parser to edit and rebuild URL strings",
-    "type": "library",
-    "autoload": {
-        "classmap": [
-            "lib/"
-        ]
-    },
-    "require": {
-        "phpunit/phpunit": "^9"
-    },
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Renan Luiz Vendramini",
-            "email": "renanlvendramini@gmail.com"
-        }
-    ],
-    "minimum-stability": "stable",
-    "scripts": {
-        "test": "./vendor/bin/phpunit --testdox tests"
+  "name": "rlvendramini/url-parser",
+  "description": "A URL parser to edit and rebuild URL strings",
+  "type": "library",
+  "require": {
+    "php": ">=8.2"
+  },
+  "require-dev": {
+    "php": ">=8.5",
+    "phpunit/phpunit": "^12.3.15",
+    "friendsofphp/php-cs-fixer": "^3.88.2",
+    "phpstan/phpstan": "^2.1.30"
+  },
+  "autoload": {
+    "classmap": [
+      "lib/"
+    ]
+  },
+  "autoload-dev": {
+    "classmap": [
+      "tests/"
+    ]
+  },
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Renan Luiz Vendramini",
+      "email": "renanlvendramini@gmail.com"
     }
+  ],
+  "minimum-stability": "stable",
+  "scripts": {
+    "test": "./vendor/bin/phpunit --testdox tests",
+    "fix": "./vendor/bin/php-cs-fixer fix",
+    "lint": "./vendor/bin/phpstan analyse"
+  }
 }
